@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-l#+_diik@nb9n7e_*lj=xwi_c@m6m0id=72-3g09tq8h1f8au9
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '192.168.0.103'
+    '192.168.0.103',
 ]
 
 
@@ -167,3 +167,5 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
+DOMAIN_IN_EMAIL_MESSAGE = 'localhost:3000'

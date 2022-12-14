@@ -8,6 +8,7 @@ from .serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 
@@ -16,14 +17,13 @@ from rest_framework.authtoken.models import Token
 
 class Register(APIView, EmailSenderMixin):
     '''Регистрация с использованием email'''
-    template_mail = 'users\\user_verification_message.html'
+    template_mail = r'users/user_verification_message.html'
     subject_message = 'Подтверждение верификации'
     verified_url = r'users/reg/success'
 
     def post(self, request):
         '''Обработка формы регистрации'''
         group_name = request.data['groups']
-        request.data.pop('groups')
         serializer = UserSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -36,7 +36,7 @@ class Register(APIView, EmailSenderMixin):
             return Response({'success_message': 'Вы успешно зарегистрировались, подтвердите почту!'})
 
     def get_extra_context_html_message(self, *args, **kwargs):
-        return {'url_delete': super().prepare_url_verification( kwargs['request'], kwargs['user'], 'users\\reg\\user_delete')}
+        return {'url_delete': super().prepare_url_verification( kwargs['request'], kwargs['user'], r'users/reg/user_delete')}
 
 
 
@@ -130,5 +130,21 @@ class TestView(APIView):
         return Response({'message': 'Вы зарегистрированы!'})
         
 
+class UserProfile(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsEmailVerifedAndUserAuth]
+
+    def get(self, request):
+        user = request.user
+        role = user.groups.all()[0]
+        user_data = {
+                        'first_name': user.first_name, 
+                        'last_name': user.last_name, 
+                        'role': str(role),
+                        'middle_name': user.middle_name,
+                        'email': user.email, 
+                        'student_group': user.student_group
+                    }
+        return Response(user_data)
 
 

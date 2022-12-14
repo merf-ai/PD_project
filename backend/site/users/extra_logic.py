@@ -6,7 +6,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
-from djsite.settings import EMAIL_HOST_USER
+from djsite.settings import EMAIL_HOST_USER, DOMAIN_IN_EMAIL_MESSAGE
 from django.forms.fields import CharField, EmailField
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -23,7 +23,6 @@ class EmailSenderMixin:
     from_email = EMAIL_HOST_USER
     subject_message = None
     verified_url = ''
-
     
     def send_mail_verify(self, request, to_email: str) -> None:
         try:
@@ -39,7 +38,7 @@ class EmailSenderMixin:
         
         
     def prepare_url_verification(self, request, user: User, *args) -> str:
-        domain = get_current_site(request).domain
+        domain = self.get_site_domain()
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         pattern_name = '/'.join(args)
@@ -48,6 +47,11 @@ class EmailSenderMixin:
 
     def get_extra_context_html_message(self, *args, **kwargs) -> dict:
         return {}
+
+
+    def get_site_domain(self):
+        return DOMAIN_IN_EMAIL_MESSAGE
+
     
 class CustomObtainAuthToken(ObtainAuthToken):
     serializer_class = CustomTokenSerializer
